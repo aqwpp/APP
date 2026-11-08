@@ -22,6 +22,14 @@ jobs:
           unzip -q USBTool-Android10-ARM64-phase8-cloud-build.zip -d .
           test -f USBTool/settings.gradle
           test -f USBTool/.github/workflows/android-debug.yml
+      - name: Patch Android API compatibility
+        run: |
+          SOURCE="USBTool/app/src/main/java/com/ssai/usbtool/runtime/bootstrap/ImportedApkDescriptorReader.java"
+          test -f "$SOURCE"
+          grep -q 'c.isolatedProcess' "$SOURCE"
+          sed -i 's/c\.isolatedProcess/false/g' "$SOURCE"
+          ! grep -q 'c.isolatedProcess' "$SOURCE"
+          echo "Replaced unavailable ServiceInfo.isolatedProcess with conservative false default"
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
