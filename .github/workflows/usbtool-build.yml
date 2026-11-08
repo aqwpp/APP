@@ -27,7 +27,7 @@ jobs:
           SOURCE="USBTool/app/src/main/java/com/ssai/usbtool/runtime/bootstrap/ImportedApkDescriptorReader.java"
           test -f "$SOURCE"
           grep -q 'c.isolatedProcess' "$SOURCE"
-          sed -i 's/c\\.isolatedProcess/false/g' "$SOURCE"
+          sed -i 's/c.isolatedProcess/false/g' "$SOURCE"
           ! grep -q 'c.isolatedProcess' "$SOURCE"
       - name: Set up Java
         uses: actions/setup-java@v4
