@@ -27,10 +27,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.7"
+      - name: Install Gradle 8.7
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle-8.7-bin.zip -d /opt
+          echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
+          /opt/gradle-8.7/bin/gradle --version
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
       - name: Install Android SDK packages
