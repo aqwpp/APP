@@ -29,7 +29,6 @@ jobs:
           grep -q 'c.isolatedProcess' "$SOURCE"
           sed -i 's/c\.isolatedProcess/false/g' "$SOURCE"
           ! grep -q 'c.isolatedProcess' "$SOURCE"
-          echo "Replaced unavailable ServiceInfo.isolatedProcess with conservative false default"
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -43,13 +42,11 @@ jobs:
           /opt/gradle-8.7/bin/gradle --version
       - name: Locate Android SDK tools
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
           if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
             echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           elif [ -x "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" ]; then
             echo "$ANDROID_HOME/cmdline-tools/16.0/bin" >> "$GITHUB_PATH"
           else
-            echo "Android SDK command-line tools not found under $ANDROID_HOME"
             find "$ANDROID_HOME" -maxdepth 4 -name sdkmanager -type f -print || true
             exit 1
           fi
@@ -58,17 +55,22 @@ jobs:
         run: |
           if [ ! -d "$ANDROID_HOME/platforms/android-35" ] || [ ! -d "$ANDROID_HOME/build-tools/35.0.0" ]; then
             sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-35" "build-tools;35.0.0"
-          else
-            echo "Android 35 platform and build-tools 35.0.0 already present"
           fi
       - name: Run Android build and tests
         working-directory: USBTool
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :fixture:assembleDebug
-      - name: Verify APKs
+      - name: Re-sign app APK as V1 only and verify
         run: |
-          ls -l USBTool/app/build/outputs/apk/debug/*.apk
-          ls -l USBTool/fixture/build/outputs/apk/debug/*.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --v1-signing-enabled true --v2-signing-enabled false USBTool/app/build/outputs/apk/debug/*.apk
+          APK="USBTool/app/build/outputs/apk/debug/app-debug.apk"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          KEY="$HOME/.android/debug.keystore"
+          test -f "$APK"
+          test -f "$KEY"
+          "$SIGNER" sign --ks "$KEY" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled false "$APK"
+          "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
+          grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
+          grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/apk-verify.txt
+          ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
