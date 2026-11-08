@@ -1,0 +1,43 @@
+name: USBTool Android 10 ARM64 Debug Build
+
+on:
+  push:
+    paths:
+      - "USBTool-Android10-ARM64-phase8-cloud-build.zip"
+      - ".github/workflows/usbtool-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Prepare source archive
+        run: |
+          test -f USBTool-Android10-ARM64-phase8-cloud-build.zip
+          unzip -q USBTool-Android10-ARM64-phase8-cloud-build.zip -d .
+          test -f USBTool/settings.gradle
+          test -f USBTool/.github/workflows/android-debug.yml
+      - name: Run Android build and tests
+        working-directory: USBTool
+        run: |
+          chmod +x ./gradlew 2>/dev/null || true
+          if [ -x ./gradlew ]; then
+            ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :fixture:assembleDebug
+          else
+            echo "Gradle wrapper is missing from the supplied archive; use the workflow's installed Gradle."
+            exit 1
+          fi
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: USBTool-Android10-ARM64-debug-apks
+          path: |
+            USBTool/app/build/outputs/apk/debug/*.apk
+            USBTool/fixture/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
