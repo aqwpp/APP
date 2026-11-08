@@ -1,0 +1,86 @@
+name: USBTool Android Debug APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'USBTool-Android10-ARM64-phase8-cloud-build.zip'
+      - '.github/workflows/android-debug.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unpack USBTool source bundle
+        run: |
+          test -s USBTool-Android10-ARM64-phase8-cloud-build.zip
+          unzip -q USBTool-Android10-ARM64-phase8-cloud-build.zip
+          test -d USBTool/app
+          test -f USBTool/settings.gradle
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Run unit tests and build Debug APKs
+        working-directory: USBTool
+        run: |
+          gradle --no-daemon clean \
+            :app:testDebugUnitTest \
+            :app:assembleDebug \
+            :fixture:assembleDebug
+
+      - name: Verify package IDs and V1-only APK signatures
+        working-directory: USBTool
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          APP_APK="app/build/outputs/apk/debug/app-debug.apk"
+          FIXTURE_APK="fixture/build/outputs/apk/debug/fixture-debug.apk"
+          test -s "$APP_APK"
+          test -s "$FIXTURE_APK"
+          "$AAPT" dump badging "$APP_APK" | grep -F "package: name='com.ssai.usbtool'"
+          "$AAPT" dump badging "$FIXTURE_APK" | grep -F "package: name='com.ssai.usbtool.fixture'"
+          for apk in "$APP_APK" "$FIXTURE_APK"; do
+            report="$("$APKSIGNER" verify --verbose "$apk" 2>&1)"
+            echo "$report"
+            echo "$report" | grep -F "Verified using v1 scheme (JAR signing): true"
+            echo "$report" | grep -F "Verified using v2 scheme (APK Signature Scheme v2): false"
+          done
+          mkdir -p dist
+          cp "$APP_APK" dist/USBTool-debug.apk
+          cp "$FIXTURE_APK" dist/USBTool-fixture-debug.apk
+          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
+
+      - name: Upload installable Debug APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: USBTool-Android10-ARM64-debug-apks
+          path: USBTool/dist/*
+          if-no-files-found: error
+          retention-days: 30
