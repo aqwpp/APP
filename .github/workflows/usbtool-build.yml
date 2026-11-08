@@ -27,7 +27,7 @@ jobs:
           SOURCE="USBTool/app/src/main/java/com/ssai/usbtool/runtime/bootstrap/ImportedApkDescriptorReader.java"
           test -f "$SOURCE"
           grep -q 'c.isolatedProcess' "$SOURCE"
-          sed -i 's/c\.isolatedProcess/false/g' "$SOURCE"
+          sed -i 's/c\\.isolatedProcess/false/g' "$SOURCE"
           ! grep -q 'c.isolatedProcess' "$SOURCE"
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -65,7 +65,10 @@ jobs:
           SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           KEY="$HOME/.android/debug.keystore"
           test -f "$APK"
-          test -f "$KEY"
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$KEY" ]; then
+            keytool -genkeypair -v -keystore "$KEY" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          fi
           "$SIGNER" sign --ks "$KEY" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled false "$APK"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
