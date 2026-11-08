@@ -69,7 +69,9 @@ jobs:
           if [ ! -f "$KEY" ]; then
             keytool -genkeypair -v -keystore "$KEY" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           fi
-          "$SIGNER" sign --ks "$KEY" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled false "$APK"
+          SIGNED="\${APK%.apk}-v1.apk"
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEY" -storepass android -keypass android -signedjar "$SIGNED" "$APK" androiddebugkey
+          mv "$SIGNED" "$APK"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
           grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/apk-verify.txt
