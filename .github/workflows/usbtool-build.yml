@@ -34,6 +34,10 @@ jobs:
           grep -q 'c.isolatedProcess' "$SOURCE"
           sed -i 's/c.isolatedProcess/false/g' "$SOURCE"
           ! grep -q 'c.isolatedProcess' "$SOURCE"
+      - name: Harden APK import and app database persistence
+        run: |
+          chmod +x scripts/phase10-hardening.sh
+          ./scripts/phase10-hardening.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
