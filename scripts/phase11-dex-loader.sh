@@ -91,8 +91,15 @@ s = s.replace(needle, insert, 1)
 method = '''
     private void testLoadDex(ProfileStore.AppRecord app) {
         try {
-            ProfileStore.Profile profile = app.profiles.isEmpty()
-                    ? store.createProfile(app.id) : app.profiles.get(0);
+            ProfileStore.AppRecord current = app;
+            if (current.profiles.isEmpty()) {
+                store.createProfile(app.id);
+                for (ProfileStore.AppRecord candidate : store.getAll()) {
+                    if (candidate.id.equals(app.id)) { current = candidate; break; }
+                }
+            }
+            if (current.profiles.isEmpty()) throw new IllegalStateException("无法创建实例目录");
+            ProfileStore.Profile profile = current.profiles.get(0);
             ImportedApkLoader.Session session = ImportedApkLoader.open(
                     this, new File(app.apkPath), profile.id);
             new AlertDialog.Builder(this).setTitle(app.label + " - DEX / 资源加载")
