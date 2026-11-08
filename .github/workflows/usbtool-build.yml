@@ -33,8 +33,10 @@ jobs:
           unzip -q /tmp/gradle-8.7-bin.zip -d /opt
           echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
           /opt/gradle-8.7/bin/gradle --version
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Check preinstalled Android SDK
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" || test -x "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"
+          echo "Android SDK: $ANDROID_HOME"
       - name: Install Android SDK packages
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Run Android build and tests
