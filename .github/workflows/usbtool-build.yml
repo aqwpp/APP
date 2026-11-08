@@ -5,6 +5,7 @@ on:
     paths:
       - "USBTool-Android10-ARM64-phase8-cloud-build.zip"
       - ".github/workflows/usbtool-build.yml"
+      - "scripts/**"
   workflow_dispatch:
 
 permissions:
