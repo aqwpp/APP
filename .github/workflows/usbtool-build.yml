@@ -22,6 +22,10 @@ jobs:
           unzip -q USBTool-Android10-ARM64-phase8-cloud-build.zip -d .
           test -f USBTool/settings.gradle
           test -f USBTool/.github/workflows/android-debug.yml
+      - name: Inspect app sources for no-root runtime work
+        run: |
+          chmod +x scripts/phase9-inspect.sh
+          (cd USBTool && ../scripts/phase9-inspect.sh)
       - name: Patch Android API compatibility
         run: |
           SOURCE="USBTool/app/src/main/java/com/ssai/usbtool/runtime/bootstrap/ImportedApkDescriptorReader.java"
