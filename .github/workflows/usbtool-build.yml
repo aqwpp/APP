@@ -38,6 +38,10 @@ jobs:
         run: |
           chmod +x scripts/phase10-hardening.sh
           ./scripts/phase10-hardening.sh
+      - name: Add experimental DEX and resource loader
+        run: |
+          chmod +x scripts/phase11-dex-loader.sh
+          ./scripts/phase11-dex-loader.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
