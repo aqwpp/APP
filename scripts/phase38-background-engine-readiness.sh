@@ -50,11 +50,18 @@ if old2 not in s: raise SystemExit("Phase 38 background install anchor not found
 s=s.replace(old2,new2,1)
 p.write_text(s)
 PY
-grep -q 'awaitEngineOffMain(core)' "$RUNNER"
-grep -q 'task.get(25, TimeUnit.SECONDS)' "$RUNNER"
-if grep -A10 'public static void prepareOnMain' "$RUNNER" | grep -q 'core.waitForEngine'; then
-  echo "waitForEngine still appears in prepareOnMain"; exit 1
-fi
+echo "Phase 38 verification: runner source after patch"
+grep -n 'awaitEngineOffMain\|waitForEngine\|task.get' "$RUNNER" || true
+grep -q 'awaitEngineOffMain(core)' "$RUNNER" || { echo "missing background wait invocation"; exit 1; }
+grep -q 'task.get(25, TimeUnit.SECONDS)' "$RUNNER" || { echo "missing bounded wait"; exit 1; }
+python3 - <<'PY'
+from pathlib import Path
+s=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java").read_text()
+a=s.index("public static void prepareOnMain")
+b=s.index("private static void awaitEngineOffMain", a)
+if "core.waitForEngine()" in s[a:b]:
+    raise SystemExit("waitForEngine still runs inside prepareOnMain")
+PY
 cat > USBTool/BUILD_AUDIT_PHASE38.txt <<'AUDIT'
 USBTool Phase 38 - move engine readiness wait off the launcher UI thread
 - Confirmed Phase 23 called VirtualCore.waitForEngine() inside prepareOnMain().
