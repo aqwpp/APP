@@ -97,6 +97,21 @@ if fixed not in s:
 print("Patched legacy ParceledListSlice generic casts:", s.count(fixed))
 PY
 
+# Fix the legacy RecentTaskInfo generic inference against modern Android SDK stubs.
+python3 - "$USBTOOL/va-lib/src/main/java/com/lody/virtual/client/hook/proxies/am/ActivityManagerStub.java" <<'PY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+s = p.read_text()
+needle = "ParceledListSlice.getList.call(_infos)"
+fixed = "(List<ActivityManager.RecentTaskInfo>) (List<?>) ParceledListSlice.getList.call(_infos)"
+if needle in s:
+    s = s.replace(needle, fixed)
+p.write_text(s)
+if fixed not in s:
+    raise SystemExit("Phase 14 RecentTaskInfo generic compatibility patch did not apply")
+print("Patched RecentTaskInfo generic cast")
+PY
+
 # Keep a machine-readable provenance and capability boundary in the build output.
 cat > "$USBTOOL/VA_INTEGRATION_PHASE14.txt" <<EOF
 VirtualApp Java/AIDL source imported from asLody/VirtualApp
