@@ -133,6 +133,11 @@ jobs:
       - name: Ensure Android SDK packages
         run: |
           sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+      - name: Restore stable debug signing key before Gradle signing
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: usbtool-debug-signing-key-v1
       - name: Run Android build and tests
         working-directory: USBTool
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :fixture:assembleDebug
@@ -140,37 +145,23 @@ jobs:
         run: |
           chmod +x scripts/phase19-runtime-artifact-audit.sh
           ./scripts/phase19-runtime-artifact-audit.sh
-      - name: Restore stable debug signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: usbtool-debug-signing-key-v1
-      - name: Re-sign app APK as V1 only and verify
+      - name: Verify Gradle-produced APK signatures and alignment (no re-signing)
         run: |
           APK="USBTool/app/build/outputs/apk/debug/app-debug.apk"
+          FIXTURE="USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk"
           SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
-          KEY="$HOME/.android/debug.keystore"
-          test -f "$APK"
-          mkdir -p "$HOME/.android"
-          if [ ! -f "$KEY" ]; then
-            keytool -genkeypair -v -keystore "$KEY" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
-          fi
           ZIPALIGN="$ANDROID_HOME/build-tools/35.0.0/zipalign"
-          SIGNED="${APK%.apk}-v1.apk"
-          ALIGNED="${APK%.apk}-v1-aligned.apk"
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEY" -storepass android -keypass android -signedjar "$SIGNED" "$APK" androiddebugkey
-          "$ZIPALIGN" -f -v 4 "$SIGNED" "$ALIGNED"
-          mv "$ALIGNED" "$APK"
-          rm -f "$SIGNED"
+          test -f "$APK"
           "$ZIPALIGN" -c -v 4 "$APK"
+          "$ZIPALIGN" -c -v 4 "$FIXTURE"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
           grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/apk-verify.txt
-          "$SIGNER" verify --verbose USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk | tee /tmp/fixture-verify.txt
+          "$SIGNER" verify --verbose "$FIXTURE" | tee /tmp/fixture-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/fixture-verify.txt
           grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/fixture-verify.txt
-          sha256sum "$APK" USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk
-          ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
+          sha256sum "$APK" "$FIXTURE"
+          ls -l "$APK" "$FIXTURE"
       - name: Package reproducible source project
         run: |
           zip -qr USBTool-Android10-ARM64-phase28-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
