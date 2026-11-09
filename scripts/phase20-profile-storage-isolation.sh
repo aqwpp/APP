@@ -29,7 +29,7 @@ public final class ProfileStorageKeys {
             throw new IllegalArgumentException("package、profile 和 preference 名称不能为空");
         }
         try {
-            String identity = packageName + "\\u0000" + profileId + "\\u0000" + preferenceName;
+            String identity = packageName.length() + ":" + packageName\n                    + profileId.length() + ":" + profileId\n                    + preferenceName.length() + ":" + preferenceName;
             byte[] digest = MessageDigest.getInstance("SHA-256")
                     .digest(identity.getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder("usbtool_profile_");
