@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: usbtool-android10-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,6 +54,10 @@ jobs:
         run: |
           chmod +x scripts/phase13-application-bootstrap.sh
           ./scripts/phase13-application-bootstrap.sh
+      - name: Isolate per-profile SharedPreferences (Phase 20)
+        run: |
+          chmod +x scripts/phase20-profile-storage-isolation.sh
+          ./scripts/phase20-profile-storage-isolation.sh
       - name: Import VirtualApp Java and AIDL core (Phase 14)
         run: |
           chmod +x scripts/phase14-import-virtualapp-core.sh
@@ -116,6 +124,7 @@ jobs:
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEY" -storepass android -keypass android -signedjar "$SIGNED" "$APK" androiddebugkey
           "$ZIPALIGN" -f -v 4 "$SIGNED" "$ALIGNED"
           mv "$ALIGNED" "$APK"
+          rm -f "$SIGNED"
           "$ZIPALIGN" -c -v 4 "$APK"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
@@ -127,7 +136,7 @@ jobs:
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase19-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
+          zip -qr USBTool-Android10-ARM64-phase20-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
             -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -137,6 +146,6 @@ jobs:
             USBTool/app/build/outputs/apk/debug/*.apk
             USBTool/fixture/build/outputs/apk/debug/*.apk
             USBTool/BUILD_AUDIT_PHASE19.txt
-            USBTool-Android10-ARM64-phase19-source.zip
+            USBTool-Android10-ARM64-phase20-source.zip
           if-no-files-found: error
           retention-days: 30
