@@ -47,10 +47,11 @@ if "Server boot marker:" not in t:
     t=t.replace("    public static void prepareOnMain(Context context) {", "    public static void prepareOnMain(Context context) {\\n        appContext = context.getApplicationContext();")
     anchor='''                result = "VirtualApp 安装/启动异常：" + error.getClass().getName()'''
     if anchor not in t: raise SystemExit("runner catch anchor missing")
-    t=t.replace(anchor,'''                result = "Server boot marker: " + readServerBootMarker()
+    t=t.replace(anchor,'''                result = "Server boot marker: " + readServerBootMarker(appContext)
                         + "\\nVirtualApp 安装/启动异常：" + error.getClass().getName()''',1)
     method="""
     private static String readServerBootMarker(Context context) {
+        if (context == null) return "context unavailable";
         java.io.File marker = new java.io.File(context.getFilesDir(), "usbtool_va_server_boot.txt");
         if (!marker.isFile()) return "missing (BinderProvider may not have started)";
         try {
