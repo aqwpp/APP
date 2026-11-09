@@ -114,6 +114,10 @@ jobs:
         run: |
           chmod +x scripts/phase28-runtime-diagnostics.sh
           ./scripts/phase28-runtime-diagnostics.sh
+      - name: Add accurate native library runtime probe (Phase 31)
+        run: |
+          chmod +x scripts/phase31-native-library-runtime-probe.sh
+          ./scripts/phase31-native-library-runtime-probe.sh
       - name: Add full VirtualApp crash diagnostics (Phase 29)
         run: |
           chmod +x scripts/phase29-full-virtualapp-crash-report.sh
