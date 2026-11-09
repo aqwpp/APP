@@ -102,6 +102,10 @@ jobs:
         run: |
           chmod +x scripts/phase26-guest-launch-diagnostics.sh
           ./scripts/phase26-guest-launch-diagnostics.sh
+      - name: Initialize VirtualCore in every process before providers (Phase 27)
+        run: |
+          chmod +x scripts/phase27-per-process-virtualcore-startup.sh
+          ./scripts/phase27-per-process-virtualcore-startup.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -165,7 +169,7 @@ jobs:
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase26-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
+          zip -qr USBTool-Android10-ARM64-phase27-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
             -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -176,7 +180,7 @@ jobs:
             USBTool/fixture/build/outputs/apk/debug/*.apk
             USBTool/BUILD_AUDIT_PHASE19.txt
             USBTool/BUILD_AUDIT_PHASE25.txt
-            USBTool/BUILD_AUDIT_PHASE26.txt
+            USBTool/BUILD_AUDIT_PHASE26.txt\n            USBTool/BUILD_AUDIT_PHASE27.txt
             USBTool-Android10-ARM64-phase26-source.zip
             USBTool-Android10-ARM64-phase25-source.zip
           if-no-files-found: error
