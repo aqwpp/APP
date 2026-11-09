@@ -4,25 +4,26 @@ ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 MOD="$ROOT/USBTool/va-lib"
 GRADLE="$MOD/build.gradle"
 APP_MK="$MOD/src/main/jni/Application.mk"
-IO_CPP="$MOD/src/main/jni/Foundation/IOUniformer.cpp"
+TMP="$ROOT/.virtualapp-arm64-source"
 
 test -f "$GRADLE"
 test -f "$MOD/src/main/jni/Android.mk"
 test -f "$APP_MK"
-test -f "$IO_CPP"
 
-# The legacy source uses syscall numbers but omitted the NDK syscall header.
-python3 - "$IO_CPP" <<'PY'
-from pathlib import Path
-import sys
-p = Path(sys.argv[1])
-s = p.read_text()
-inc = '#include <sys/syscall.h>'
-if inc not in s:
-    p.write_text(inc + '\n' + s)
-PY
+# Replace the legacy 32-bit-only native layer with an Apache-2.0 VirtualApp
+# revision that contains ARM64 inline hooks and 64-bit syscall handling.
+rm -rf "$TMP"
+git clone --quiet https://github.com/ISEKHON/VirtualApp.git "$TMP"
+git -C "$TMP" checkout --quiet b3c634ad7941765df3da84a207aca94b7861afae
+test -f "$TMP/lib/src/main/jni/A64Inlinehook/And64InlineHook.cpp"
+test -f "$TMP/lib/src/main/jni/Foundation/IOUniformer.cpp"
+grep -q '__NR_newfstatat' "$TMP/lib/src/main/jni/Foundation/IOUniformer.cpp"
+rm -rf "$MOD/src/main/jni"
+mkdir -p "$MOD/src/main"
+cp -a "$TMP/lib/src/main/jni" "$MOD/src/main/jni"
+cp "$TMP/LICENSE" "$MOD/UPSTREAM_VIRTUALAPP_LICENSE_APACHE_2.0.txt"
 
-# Re-enable the upstream NDK build for a modern ARM64 toolchain.
+# Keep the target constrained to the user's Android 10 ARM64 device.
 cat > "$APP_MK" <<'EOF'
 APP_ABI := arm64-v8a
 APP_PLATFORM := android-29
@@ -71,11 +72,10 @@ for item in required:
 PY
 
 cat > "$MOD/NATIVE_ARM64_PHASE16.txt" <<'EOF'
-Phase 16: enable compilation of the pinned VirtualApp native source for arm64-v8a.
-Toolchain: Android NDK 27.2.12479018, Android API 29, libc++_static.
-The legacy IOUniformer source is explicitly given the NDK syscall declarations header.
-This phase only attempts to compile and package the upstream native library.
-A successful .so build is not proof that VirtualCore hooks or guest components work.
-Runtime initialization and Android 10 device tests remain separate acceptance gates.
+Phase 16: use a pinned Apache-2.0 VirtualApp native revision with ARM64 inline hooks
+and 64-bit syscall handling. Target: arm64-v8a, Android API 29, NDK 27.2.12479018.
+This phase compiles and packages the native layer; it does not prove framework hooks,
+guest Activity/Service/Provider launch, data isolation, or full Android 10 compatibility.
+Those remain separate runtime and physical-device acceptance gates.
 EOF
-echo "Phase 16: ARM64 NDK build enabled; syscall header compatibility patch applied."
+echo "Phase 16: pinned ARM64-capable VirtualApp native sources installed."
