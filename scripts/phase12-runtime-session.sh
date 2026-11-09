@@ -66,27 +66,27 @@ replacement = """    private void testLoadDex(ProfileStore.AppRecord app) {
             ImportedApkDescriptor descriptor = ImportedApkDescriptorReader.read(
                     this, new File(app.apkPath));
             StringBuilder report = new StringBuilder(session.report);
-            report.append("\\n实例会话：已保留（").append(key).append("）");
-            report.append("\\n当前进程会话数：").append(ImportedApkRuntimeRegistry.size());
+            report.append(" | 实例会话：已保留（").append(key).append("）");
+            report.append(" | 当前进程会话数：").append(ImportedApkRuntimeRegistry.size());
             if (descriptor.applicationClass != null
                     && !descriptor.applicationClass.trim().isEmpty()
                     && !"android.app.Application".equals(descriptor.applicationClass)) {
                 try {
                     Class<?> applicationType = Class.forName(
                             descriptor.applicationClass, false, session.classLoader);
-                    report.append("\\nApplication 类解析：成功（")
+                    report.append(" | Application 类解析：成功（")
                             .append(applicationType.getName()).append("）");
-                    report.append("\\n安全模式：未初始化类、未执行 Application.onCreate()");
+                    report.append(" | 安全模式：未初始化类、未执行 Application.onCreate()");
                 } catch (Throwable classError) {
-                    report.append("\\nApplication 类解析：失败（")
+                    report.append(" | Application 类解析：失败（")
                             .append(classError.getClass().getSimpleName()).append(": ")
                             .append(String.valueOf(classError.getMessage())).append("）");
                 }
             } else {
-                report.append("\\nApplication 类：使用 Android 默认 Application");
-                report.append("\\n安全模式：未创建 Application 实例");
+                report.append(" | Application 类：使用 Android 默认 Application");
+                report.append(" | 安全模式：未创建 Application 实例");
             }
-            report.append("\\n说明：这不是 APK 启动；组件生命周期、Provider、系统服务代理仍未完成。");
+            report.append(" | 说明：这不是 APK 启动；组件生命周期、Provider、系统服务代理仍未完成。");
             new AlertDialog.Builder(this).setTitle(app.label + " - 运行时探测")
                     .setMessage(report.toString()).setPositiveButton("关闭", null).show();
         } catch (Throwable e) {
@@ -97,7 +97,7 @@ replacement = """    private void testLoadDex(ProfileStore.AppRecord app) {
     }
 
     private void analyzeBootstrap"""
-s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+s2, n = re.subn(pattern, lambda match: replacement, s, count=1, flags=re.S)
 if n != 1:
     raise SystemExit("Could not replace Phase 11 testLoadDex method; source layout changed")
 main.write_text(s2)
