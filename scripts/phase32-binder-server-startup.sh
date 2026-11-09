@@ -43,8 +43,8 @@ p.write_text(s)
 r=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 t=r.read_text()
 if "Server boot marker:" not in t:
-    t=t.replace("    private static final Handler MAIN = new Handler(Looper.getMainLooper());", "    private static final Handler MAIN = new Handler(Looper.getMainLooper());\\n    private static volatile Context appContext;")
-    t=t.replace("    public static void prepareOnMain(Context context) {", "    public static void prepareOnMain(Context context) {\\n        appContext = context.getApplicationContext();")
+    t=t.replace("    private static final Handler MAIN = new Handler(Looper.getMainLooper());", "    private static final Handler MAIN = new Handler(Looper.getMainLooper());\n    private static volatile Context appContext;")
+    t=t.replace("    public static void prepareOnMain(Context context) {", "    public static void prepareOnMain(Context context) {\n        appContext = context.getApplicationContext();")
     anchor='''                result = "VirtualApp 安装/启动异常：" + error.getClass().getName()'''
     if anchor not in t: raise SystemExit("runner catch anchor missing")
     t=t.replace(anchor,'''                result = "Server boot marker: " + readServerBootMarker(appContext)
