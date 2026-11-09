@@ -13,6 +13,28 @@ new='''            // Engine readiness is awaited by the background install exec
         } catch (Throwable error) {'''
 if old not in s: raise SystemExit("Phase 38 wrapped wait anchor not found")
 s=s.replace(old,new,1)
+anchor='''    /** Package parsing/install and launch request are performed off the UI thread. */'''
+helper='''    private static void awaitEngineOffMain(VirtualCore core) throws Exception {
+        FutureTask<Void> task = new FutureTask<>(() -> {
+            core.waitForEngine();
+            return null;
+        });
+        Thread waiter = new Thread(task, "USBTool-EngineReadyWait");
+        waiter.setDaemon(true);
+        waiter.start();
+        try {
+            task.get(25, TimeUnit.SECONDS);
+        } catch (TimeoutException timeout) {
+            task.cancel(true);
+            throw new IllegalStateException(
+                    "等待 VirtualApp 引擎就绪超过 25 秒；已停止本次安装，避免界面无限等待。"
+                    + " Engine launched=" + core.isEngineLaunched(), timeout);
+        }
+    }
+
+    /** Package parsing/install and launch request are performed off the UI thread. */'''
+if anchor not in s: raise SystemExit("Phase 38 helper insertion anchor not found")
+s=s.replace(anchor,helper,1)
 old2='''                VirtualCore core = VirtualCore.get();
                 if (!core.isStartup()) {
                     throw new IllegalStateException("VirtualCore 尚未初始化；请先在主线程初始化引擎");
@@ -30,7 +52,7 @@ p.write_text(s)
 PY
 grep -q 'awaitEngineOffMain(core)' "$RUNNER"
 grep -q 'task.get(25, TimeUnit.SECONDS)' "$RUNNER"
-if grep -A8 'public static void prepareOnMain' "$RUNNER" | grep -q 'waitForEngine'; then
+if grep -A10 'public static void prepareOnMain' "$RUNNER" | grep -q 'core.waitForEngine'; then
   echo "waitForEngine still appears in prepareOnMain"; exit 1
 fi
 cat > USBTool/BUILD_AUDIT_PHASE38.txt <<'AUDIT'
