@@ -185,6 +185,7 @@ jobs:
             USBTool/BUILD_AUDIT_PHASE25.txt
             USBTool/BUILD_AUDIT_PHASE26.txt
             USBTool/BUILD_AUDIT_PHASE27.txt
-            USBTool-Android10-ARM64-phase27-source.zip
+            USBTool/BUILD_AUDIT_PHASE28.txt
+            USBTool-Android10-ARM64-phase28-source.zip
           if-no-files-found: error
           retention-days: 30
