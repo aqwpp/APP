@@ -142,6 +142,10 @@ jobs:
         run: |
           chmod +x scripts/phase38-background-engine-readiness.sh
           ./scripts/phase38-background-engine-readiness.sh
+      - name: Bound VirtualApp Binder operations and show startup progress (Phase 39)
+        run: |
+          chmod +x scripts/phase39-bounded-ipc.sh
+          ./scripts/phase39-bounded-ipc.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -210,6 +214,7 @@ jobs:
             USBTool/BUILD_AUDIT_PHASE27.txt
             USBTool/BUILD_AUDIT_PHASE28.txt
             USBTool/BUILD_AUDIT_PHASE37.txt
+            USBTool/BUILD_AUDIT_PHASE39.txt
             USBTool-Android10-ARM64-phase28-source.zip
           if-no-files-found: error
           retention-days: 30
