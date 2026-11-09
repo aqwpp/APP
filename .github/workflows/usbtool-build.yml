@@ -110,6 +110,10 @@ jobs:
         run: |
           chmod +x scripts/phase28-runtime-diagnostics.sh
           ./scripts/phase28-runtime-diagnostics.sh
+      - name: Add full VirtualApp crash diagnostics (Phase 29)
+        run: |
+          chmod +x scripts/phase29-full-virtualapp-crash-report.sh
+          ./scripts/phase29-full-virtualapp-crash-report.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
