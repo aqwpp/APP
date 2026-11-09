@@ -92,9 +92,9 @@ fixed = "(List<ResolveInfo>) (List<?>) ParceledListSlice.getList.call(_hostResul
 if needle in s:
     s = s.replace(needle, fixed)
 p.write_text(s)
-if needle in s:
-    raise SystemExit("Phase 14 generic compatibility patch did not apply completely")
-print("Patched legacy ParceledListSlice generic casts")
+if fixed not in s:
+    raise SystemExit("Phase 14 generic compatibility patch did not apply")
+print("Patched legacy ParceledListSlice generic casts:", s.count(fixed))
 PY
 
 # Keep a machine-readable provenance and capability boundary in the build output.
