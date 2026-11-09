@@ -50,6 +50,10 @@ jobs:
         run: |
           chmod +x scripts/phase13-application-bootstrap.sh
           ./scripts/phase13-application-bootstrap.sh
+      - name: Import VirtualApp Java and AIDL core (Phase 14)
+        run: |
+          chmod +x scripts/phase14-import-virtualapp-core.sh
+          ./scripts/phase14-import-virtualapp-core.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -90,7 +94,7 @@ jobs:
           if [ ! -f "$KEY" ]; then
             keytool -genkeypair -v -keystore "$KEY" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           fi
-          SIGNED="\${APK%.apk}-v1.apk"
+          SIGNED="${APK%.apk}-v1.apk"
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEY" -storepass android -keypass android -signedjar "$SIGNED" "$APK" androiddebugkey
           mv "$SIGNED" "$APK"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
