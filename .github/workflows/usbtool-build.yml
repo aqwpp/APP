@@ -46,6 +46,10 @@ jobs:
         run: |
           chmod +x scripts/phase12-runtime-session.sh
           ./scripts/phase12-runtime-session.sh
+      - name: Add opt-in Application bootstrap experiment
+        run: |
+          chmod +x scripts/phase13-application-bootstrap.sh
+          ./scripts/phase13-application-bootstrap.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
