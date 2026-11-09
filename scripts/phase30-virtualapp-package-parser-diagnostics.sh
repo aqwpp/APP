@@ -41,37 +41,40 @@ p.write_text(s)
 
 p=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 s=p.read_text()
+if "private static volatile Context hostContext" not in s:
+    s=s.replace("    private static final ExecutorService EXECUTOR", "    private static volatile Context hostContext;\\n    private static final ExecutorService EXECUTOR")
+    s=s.replace("        VirtualCore core = VirtualCore.get();\\n        try {", "        hostContext = context.getApplicationContext();\\n        VirtualCore core = VirtualCore.get();\\n        try {", 1)
 if "PackageInfo archiveInfo" not in s:
-    s=s.replace("import android.content.Intent;", "import android.content.Intent;\nimport android.content.pm.PackageInfo;\nimport android.content.pm.PackageManager;\nimport java.util.zip.ZipFile;")
-old='''                VirtualCore core = VirtualCore.get();
+    s=s.replace("import android.content.Intent;", "import android.content.Intent;\\nimport android.content.pm.PackageInfo;\\nimport android.content.pm.PackageManager;\\nimport java.util.zip.ZipFile;")
+    old='''                VirtualCore core = VirtualCore.get();
                 if (!core.isStartup()) {
                     throw new IllegalStateException("VirtualCore 尚未初始化；请先在主线程初始化引擎");
                 }
                 InstallResult install = core.installPackage(
                         apk.getAbsolutePath(), InstallStrategy.UPDATE_IF_EXIST);'''
-new='''                PackageManager pm = android.app.Application.getProcessName() == null
-                        ? null : android.app.ActivityThread.currentApplication().getPackageManager();
+    new='''                Context appContext = hostContext;
+                PackageManager pm = appContext == null ? null : appContext.getPackageManager();
                 if (pm == null) throw new IllegalStateException("无法取得系统 PackageManager");
                 PackageInfo archiveInfo = pm.getPackageArchiveInfo(apk.getAbsolutePath(),
                         PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES
                                 | PackageManager.GET_RECEIVERS | PackageManager.GET_PROVIDERS);
                 StringBuilder preflight = new StringBuilder();
                 preflight.append("APK path: ").append(apk.getAbsolutePath())
-                        .append("\\\\nAPK bytes: ").append(apk.length());
+                        .append("\\nAPK bytes: ").append(apk.length());
                 try (ZipFile zip = new ZipFile(apk)) {
-                    preflight.append("\\\\nAndroidManifest.xml entry: ")
+                    preflight.append("\\nAndroidManifest.xml entry: ")
                             .append(zip.getEntry("AndroidManifest.xml") != null);
                 }
                 if (archiveInfo == null || archiveInfo.packageName == null) {
-                    throw new IllegalStateException("系统 PackageManager 也无法解析该 APK。\\\\n"
-                            + preflight + "\\\\n请确认导入的是完整 base APK，而不是 XAPK/APKS/拆分包中的单个 split。");
+                    throw new IllegalStateException("系统 PackageManager 也无法解析该 APK。\\n"
+                            + preflight + "\\n请确认导入的是完整 base APK，而不是 XAPK/APKS/拆分包中的单个 split。");
                 }
-                preflight.append("\\\\nHost parser package: ").append(archiveInfo.packageName)
-                        .append("\\\\nHost parser versionCode: ").append(archiveInfo.versionCode)
-                        .append("\\\\nSplit APK: ").append(archiveInfo.splitNames != null
+                preflight.append("\\nHost parser package: ").append(archiveInfo.packageName)
+                        .append("\\nHost parser versionCode: ").append(archiveInfo.versionCode)
+                        .append("\\nSplit APK: ").append(archiveInfo.splitNames != null
                                 && archiveInfo.splitNames.length > 0);
                 if (!expectedPackage.equals(archiveInfo.packageName)) {
-                    throw new IllegalStateException("导入记录包名与 APK 实际包名不一致。\\\\n"
+                    throw new IllegalStateException("导入记录包名与 APK 实际包名不一致。\\n"
                             + preflight);
                 }
                 VirtualCore core = VirtualCore.get();
@@ -80,12 +83,10 @@ new='''                PackageManager pm = android.app.Application.getProcessNam
                 }
                 InstallResult install = core.installPackage(
                         apk.getAbsolutePath(), InstallStrategy.UPDATE_IF_EXIST);'''
-if old not in s:
-    if "Host parser package:" not in s:
-        raise SystemExit("runner install block did not match; refusing unsafe patch")
-else:
+    if old not in s: raise SystemExit("install block anchor missing")
     s=s.replace(old,new,1)
 p.write_text(s)
+
 PY
 cat > USBTool/BUILD_AUDIT_PHASE30.txt <<'AUDIT'
 USBTool Phase 30 - VirtualApp package parser diagnostics
