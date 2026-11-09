@@ -78,6 +78,10 @@ jobs:
         run: |
           chmod +x scripts/phase18-manifest-topology-audit.sh
           ./scripts/phase18-manifest-topology-audit.sh
+      - name: Add opt-in VirtualCore startup probe (Phase 21)
+        run: |
+          chmod +x scripts/phase21-virtualcore-startup-probe.sh
+          ./scripts/phase21-virtualcore-startup-probe.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -141,7 +145,7 @@ jobs:
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase20-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
+          zip -qr USBTool-Android10-ARM64-phase21-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
             -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
