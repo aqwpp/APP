@@ -32,6 +32,8 @@ public class PackageParserPie {
 """)
 compat = Path("USBTool/va-lib/src/main/java/com/lody/virtual/helper/compat/PackageParserCompat.java")
 cs = compat.read_text()
+if "import mirror.android.content.pm.PackageParserPie;" not in cs:
+    cs = cs.replace("import mirror.android.content.pm.PackageParserNougat;","import mirror.android.content.pm.PackageParserNougat;\\nimport mirror.android.content.pm.PackageParserPie;")
 if "PackageParserPie.collectCertificates.callWithException" not in cs:
     old_branch = """        if (API_LEVEL >= N) {
             PackageParserNougat.collectCertificates.callWithException(p, flags);"""
