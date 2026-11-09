@@ -62,6 +62,10 @@ jobs:
         run: |
           chmod +x scripts/phase14-import-virtualapp-core.sh
           ./scripts/phase14-import-virtualapp-core.sh
+      - name: Add VirtualApp package parser diagnostics (Phase 30)
+        run: |
+          chmod +x scripts/phase30-virtualapp-package-parser-diagnostics.sh
+          ./scripts/phase30-virtualapp-package-parser-diagnostics.sh
       - name: Add safe VirtualApp readiness diagnostics (Phase 15)
         run: |
           chmod +x scripts/phase15-virtualapp-readiness.sh
