@@ -66,6 +66,10 @@ jobs:
         run: |
           chmod +x scripts/phase30-virtualapp-package-parser-diagnostics.sh
           ./scripts/phase30-virtualapp-package-parser-diagnostics.sh
+      - name: Fix Android 10 PackageParser SigningDetails (Phase 33)
+        run: |
+          chmod +x scripts/phase33-android10-signingdetails-compat.sh
+          ./scripts/phase33-android10-signingdetails-compat.sh
       - name: Add safe VirtualApp readiness diagnostics (Phase 15)
         run: |
           chmod +x scripts/phase15-virtualapp-readiness.sh
