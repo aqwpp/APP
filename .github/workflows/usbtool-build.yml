@@ -98,6 +98,10 @@ jobs:
       - name: Run Android build and tests
         working-directory: USBTool
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :fixture:assembleDebug
+      - name: Audit merged manifest and ARM64 APK contents
+        run: |
+          chmod +x scripts/phase19-runtime-artifact-audit.sh
+          ./scripts/phase19-runtime-artifact-audit.sh
       - name: Re-sign app APK as V1 only and verify
         run: |
           APK="USBTool/app/build/outputs/apk/debug/app-debug.apk"
@@ -122,5 +126,6 @@ jobs:
           path: |
             USBTool/app/build/outputs/apk/debug/*.apk
             USBTool/fixture/build/outputs/apk/debug/*.apk
+            USBTool/BUILD_AUDIT_PHASE19.txt
           if-no-files-found: error
           retention-days: 30
