@@ -107,6 +107,6 @@ lines = [
     "- Separate Android UID, permission isolation, or security sandbox",
     "- Android 10 physical-device lifecycle, linker namespace, and multi-process behavior",
 ]
-report.write_text("\\n".join(lines) + "\\n")
-print("\\n".join(lines))
+report.write_text("\n".join(lines) + "\n")
+print("\n".join(lines))
 PY
