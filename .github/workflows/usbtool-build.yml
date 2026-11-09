@@ -169,8 +169,7 @@ jobs:
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase27-source.zip USBTool scripts .github/workflows/usbtool-build.yml \\
-            -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
+          zip -qr USBTool-Android10-ARM64-phase27-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
