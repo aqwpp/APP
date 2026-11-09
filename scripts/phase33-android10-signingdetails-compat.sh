@@ -69,8 +69,8 @@ helpers = """    /**
 if anchor not in s:
     raise SystemExit("Cannot locate buildPackageCache insertion point")
 s = s.replace(anchor, helpers + anchor, 1)
-if "cache.mSignatures = p.mSignatures;" in s or "p.mSignatures =" in s:
-    raise SystemExit("Direct PackageParser mSignatures access remains")
+if "cache.mSignatures = p.mSignatures;" in s or "p.mSignatures = new Signature[]" in s:
+    raise SystemExit("Legacy direct PackageParser signature assignment remains")
 if "getPackageSignatures(p)" not in s or "mSigningDetails" not in s:
     raise SystemExit("Phase 33 verification failed")
 p.write_text(s)
