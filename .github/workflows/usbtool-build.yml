@@ -42,6 +42,10 @@ jobs:
         run: |
           chmod +x scripts/phase11-dex-loader.sh
           ./scripts/phase11-dex-loader.sh
+      - name: Add retained runtime sessions and safe Application class probe
+        run: |
+          chmod +x scripts/phase12-runtime-session.sh
+          ./scripts/phase12-runtime-session.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
