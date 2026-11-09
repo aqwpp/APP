@@ -66,8 +66,7 @@ public final class VirtualCoreStartupProbe {
                     .append(error.getClass().getName())
                     .append("\n")
                     .append(String.valueOf(error.getMessage()));
-            report.append("\n
-未确认 guest APK 可运行。请保存完整错误信息用于兼容性修复。");
+            report.append("\n\n未确认 guest APK 可运行。请保存完整错误信息用于兼容性修复。");
         }
         return report.toString();
     }
