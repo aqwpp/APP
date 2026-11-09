@@ -75,12 +75,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Install Gradle 8.7
-        run: |
-          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 https://downloads.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle-8.7-bin.zip
-          unzip -q /tmp/gradle-8.7-bin.zip -d /opt
-          echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
-          /opt/gradle-8.7/bin/gradle --version
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
       - name: Locate Android SDK tools
         run: |
           if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
@@ -112,12 +110,18 @@ jobs:
           if [ ! -f "$KEY" ]; then
             keytool -genkeypair -v -keystore "$KEY" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           fi
+          ZIPALIGN="$ANDROID_HOME/build-tools/35.0.0/zipalign"
           SIGNED="${APK%.apk}-v1.apk"
+          ALIGNED="${APK%.apk}-v1-aligned.apk"
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEY" -storepass android -keypass android -signedjar "$SIGNED" "$APK" androiddebugkey
-          mv "$SIGNED" "$APK"
+          "$ZIPALIGN" -f -v 4 "$SIGNED" "$ALIGNED"
+          mv "$ALIGNED" "$APK"
+          "$ZIPALIGN" -c -v 4 "$APK"
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
           grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/apk-verify.txt
+          "$SIGNER" verify --verbose --v1-signing-enabled true --v2-signing-enabled false USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk
+          sha256sum "$APK" USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
