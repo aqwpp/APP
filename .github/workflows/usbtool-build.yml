@@ -134,6 +134,10 @@ jobs:
         run: |
           chmod +x scripts/phase36-daemon-foreground-notification.sh
           ./scripts/phase36-daemon-foreground-notification.sh
+      - name: Unblock launcher startup from synchronous VirtualCore hooks (Phase 37)
+        run: |
+          chmod +x scripts/phase37-launcher-startup-unblock.sh
+          ./scripts/phase37-launcher-startup-unblock.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -201,6 +205,7 @@ jobs:
             USBTool/BUILD_AUDIT_PHASE26.txt
             USBTool/BUILD_AUDIT_PHASE27.txt
             USBTool/BUILD_AUDIT_PHASE28.txt
+            USBTool/BUILD_AUDIT_PHASE37.txt
             USBTool-Android10-ARM64-phase28-source.zip
           if-no-files-found: error
           retention-days: 30
