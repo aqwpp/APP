@@ -12,6 +12,41 @@ if pos < 0:
     raise SystemExit("Cannot find PackageParserEx.parsePackage; source layout changed")
 print("VirtualApp parser source context:")
 print(s[max(0, pos-700):pos+1100])
+# Android 9+ changed PackageParser.collectCertificates(Package, int) to
+# collectCertificates(Package, boolean). The legacy Nougat mirror resolves
+# the old int signature, leaving its RefStaticMethod null on API 28/29.
+pie = Path("USBTool/va-lib/src/main/java/mirror/android/content/pm/PackageParserPie.java")
+pie.parent.mkdir(parents=True, exist_ok=True)
+pie.write_text("""package mirror.android.content.pm;
+
+import mirror.MethodReflectParams;
+import mirror.RefClass;
+import mirror.RefStaticMethod;
+
+/** Android 9 (API 28) and newer PackageParser certificate API. */
+public class PackageParserPie {
+    public static Class<?> TYPE = RefClass.load(PackageParserPie.class, "android.content.pm.PackageParser");
+    @MethodReflectParams({"android.content.pm.PackageParser$Package", "boolean"})
+    public static RefStaticMethod<Void> collectCertificates;
+}
+""")
+compat = Path("USBTool/va-lib/src/main/java/com/lody/virtual/helper/compat/PackageParserCompat.java")
+cs = compat.read_text()
+if "PackageParserPie.collectCertificates.callWithException" not in cs:
+    old_branch = """        if (API_LEVEL >= N) {
+            PackageParserNougat.collectCertificates.callWithException(p, flags);"""
+    new_branch = """        if (API_LEVEL >= Build.VERSION_CODES.P) {
+            // Android 9/10 signature is (Package, boolean skipVerify), not (Package, int flags).
+            // false preserves normal APK certificate verification.
+            PackageParserPie.collectCertificates.callWithException(p, false);
+        } else if (API_LEVEL >= N) {
+            PackageParserNougat.collectCertificates.callWithException(p, flags);"""
+    if old_branch not in cs:
+        raise SystemExit("PackageParserCompat certificate branch changed; refusing patch")
+    cs = cs.replace(old_branch, new_branch, 1)
+    compat.write_text(cs)
+if "PackageParserPie.collectCertificates.callWithException(p, false)" not in compat.read_text():
+    raise SystemExit("Android P certificate compatibility patch failed")
 # Preserve the parser exception in InstallResult.error for the host UI.
 if "USBTool parser diagnostic:" not in s:
     old = """        VPackage pkg = null;
@@ -46,10 +81,11 @@ if "parserDiagnostic = android.util.Log.getStackTraceString(e);" not in s or "Pa
 p.write_text(s)
 PY
 cat > USBTool/BUILD_AUDIT_PHASE30.txt <<'AUDIT'
-USBTool Phase 30 - VirtualApp package parser diagnostics
-- Log the original PackageParserEx Throwable under VAppManagerService.
-- Return the parser Throwable stack trace through InstallResult.error (capped at 6000 chars), so the host UI can display the actual cause without ADB.
-- Guard patch around the actual PackageParserEx call site and preserve Parcelable InstallResult.error transport.
-- Does not claim parser compatibility or guest launch success until validated on device.
+USBTool Phase 30 - Android P+ PackageParser certificate compatibility
+- Android 9/API 28 and Android 10/API 29 use PackageParser.collectCertificates(Package, boolean).
+- The legacy Nougat mirror expected (Package, int), causing a null RefStaticMethod on API 29.
+- Added PackageParserPie mirror with the boolean signature and call skipVerify=false (normal verification retained).
+- Parser Throwable is returned through InstallResult.error for device-side diagnostics.
+- Guest runtime compatibility remains unverified.
 AUDIT
 echo "Phase 30 VirtualApp parser diagnostics source audit passed."
