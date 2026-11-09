@@ -108,6 +108,11 @@ jobs:
         run: |
           chmod +x scripts/phase19-runtime-artifact-audit.sh
           ./scripts/phase19-runtime-artifact-audit.sh
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: usbtool-debug-signing-key-v1
       - name: Re-sign app APK as V1 only and verify
         run: |
           APK="USBTool/app/build/outputs/apk/debug/app-debug.apk"
