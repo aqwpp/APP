@@ -81,6 +81,22 @@ if "project(':va-lib')" not in a and 'project(":va-lib")' not in a:
 app.write_text(a)
 PY
 
+# Java 17's stricter generic inference exposes raw List<?> return types in this
+# legacy helper. Keep the runtime behavior unchanged and make the ResolveInfo cast explicit.
+python3 - "$USBTOOL/va-lib/src/main/java/com/lody/virtual/client/hook/proxies/pm/MethodProxies.java" <<'PY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+s = p.read_text()
+needle = "ParceledListSlice.getList.call(_hostResult)"
+fixed = "(List<ResolveInfo>) (List<?>) ParceledListSlice.getList.call(_hostResult)"
+if needle in s:
+    s = s.replace(needle, fixed)
+p.write_text(s)
+if needle in s:
+    raise SystemExit("Phase 14 generic compatibility patch did not apply completely")
+print("Patched legacy ParceledListSlice generic casts")
+PY
+
 # Keep a machine-readable provenance and capability boundary in the build output.
 cat > "$USBTOOL/VA_INTEGRATION_PHASE14.txt" <<EOF
 VirtualApp Java/AIDL source imported from asLody/VirtualApp
