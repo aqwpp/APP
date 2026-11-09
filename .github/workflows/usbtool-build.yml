@@ -138,6 +138,10 @@ jobs:
         run: |
           chmod +x scripts/phase37-launcher-startup-unblock.sh
           ./scripts/phase37-launcher-startup-unblock.sh
+      - name: Move VirtualApp engine readiness wait off UI thread (Phase 38)
+        run: |
+          chmod +x scripts/phase38-background-engine-readiness.sh
+          ./scripts/phase38-background-engine-readiness.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
