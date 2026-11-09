@@ -7,36 +7,11 @@ from pathlib import Path
 p=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 s=p.read_text()
 s=s.replace("import java.util.concurrent.Executors;", "import java.util.concurrent.Executors;\nimport java.util.concurrent.FutureTask;\nimport java.util.concurrent.TimeUnit;\nimport java.util.concurrent.TimeoutException;")
-old='''        core.initialize(new VirtualCore.VirtualInitializer() {});
-        core.waitForEngine();
-    }
-
-    /** Package parsing/install and launch request are performed off the UI thread. */'''
-new='''        core.initialize(new VirtualCore.VirtualInitializer() {});
-        // Do not wait for the remote engine here: this method runs on the UI thread.
-        // The bounded wait is performed by the install executor below.
-    }
-
-    private static void awaitEngineOffMain(VirtualCore core) throws Exception {
-        FutureTask<Void> task = new FutureTask<>(() -> {
-            core.waitForEngine();
-            return null;
-        });
-        Thread waiter = new Thread(task, "USBTool-EngineReadyWait");
-        waiter.setDaemon(true);
-        waiter.start();
-        try {
-            task.get(25, TimeUnit.SECONDS);
-        } catch (TimeoutException timeout) {
-            task.cancel(true);
-            throw new IllegalStateException(
-                    "等待 VirtualApp 引擎就绪超过 25 秒；已停止本次安装，避免界面无限等待。"
-                    + " Engine launched=" + core.isEngineLaunched(), timeout);
-        }
-    }
-
-    /** Package parsing/install and launch request are performed off the UI thread. */'''
-if old not in s: raise SystemExit("Phase 38 prepareOnMain anchor not found")
+old='''            core.waitForEngine();
+        } catch (Throwable error) {'''
+new='''            // Engine readiness is awaited by the background install executor.
+        } catch (Throwable error) {'''
+if old not in s: raise SystemExit("Phase 38 wrapped wait anchor not found")
 s=s.replace(old,new,1)
 old2='''                VirtualCore core = VirtualCore.get();
                 if (!core.isStartup()) {
