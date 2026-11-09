@@ -120,9 +120,15 @@ jobs:
           "$SIGNER" verify --verbose "$APK" | tee /tmp/apk-verify.txt
           grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/apk-verify.txt
           grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/apk-verify.txt
-          "$SIGNER" verify --verbose --v1-signing-enabled true --v2-signing-enabled false USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk
+          "$SIGNER" verify --verbose USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk | tee /tmp/fixture-verify.txt
+          grep -q 'Verified using v1 scheme (JAR signing): true' /tmp/fixture-verify.txt
+          grep -q 'Verified using v2 scheme (APK Signature Scheme v2): false' /tmp/fixture-verify.txt
           sha256sum "$APK" USBTool/fixture/build/outputs/apk/debug/fixture-debug.apk
           ls -l "$APK" USBTool/fixture/build/outputs/apk/debug/*.apk
+      - name: Package reproducible source project
+        run: |
+          zip -qr USBTool-Android10-ARM64-phase19-source.zip USBTool scripts .github/workflows/usbtool-build.yml \
+            -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -131,5 +137,6 @@ jobs:
             USBTool/app/build/outputs/apk/debug/*.apk
             USBTool/fixture/build/outputs/apk/debug/*.apk
             USBTool/BUILD_AUDIT_PHASE19.txt
+            USBTool-Android10-ARM64-phase19-source.zip
           if-no-files-found: error
           retention-days: 30
