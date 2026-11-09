@@ -18,6 +18,20 @@ git -C "$TMP" checkout --quiet b3c634ad7941765df3da84a207aca94b7861afae
 test -f "$TMP/lib/src/main/jni/A64Inlinehook/And64InlineHook.cpp"
 test -f "$TMP/lib/src/main/jni/Foundation/IOUniformer.cpp"
 grep -q '__NR_newfstatat' "$TMP/lib/src/main/jni/Foundation/IOUniformer.cpp"
+
+# NDK 27's Clang rejects the upstream fbjni variable-length array.
+python3 - "$TMP/lib/src/main/jni/fb/include/fb/fbjni/CoreClasses-inl.h" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+s = p.read_text()
+s = s.replace('#include <stdlib.h>', '#include <stdlib.h>\n#include <vector>')
+s = s.replace('JNINativeMethod jnimethods[methods.size()];', 'std::vector<JNINativeMethod> jnimethods(methods.size());')
+s = s.replace('env->RegisterNatives(self(), jnimethods, methods.size())', 'env->RegisterNatives(self(), jnimethods.data(), static_cast<jint>(methods.size()))')
+if 'std::vector<JNINativeMethod> jnimethods(methods.size());' not in s or 'jnimethods.data()' not in s:
+    raise SystemExit('fbjni NDK 27 compatibility patch failed')
+p.write_text(s)
+PY
 rm -rf "$MOD/src/main/jni"
 mkdir -p "$MOD/src/main"
 cp -a "$TMP/lib/src/main/jni" "$MOD/src/main/jni"
