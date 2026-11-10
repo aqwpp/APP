@@ -175,6 +175,10 @@ jobs:
         run: |
           chmod +x scripts/phase46-clipboard-mirror-fallback.sh
           ./scripts/phase46-clipboard-mirror-fallback.sh
+      - name: Resolve vendor Android 10 clipboard Binder without mService (Phase 47)
+        run: |
+          chmod +x scripts/phase47-vendor-clipboard-binder-fallback.sh
+          ./scripts/phase47-vendor-clipboard-binder-fallback.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
