@@ -96,7 +96,7 @@ if "writeUSBToolProcessStage" not in s:
 p=Path("USBTool/va-lib/src/main/java/com/lody/virtual/client/stub/StubContentProvider.java")
 s=p.read_text().replace("\t", "    ")
 if "import android.content.Context;" not in s:
-    s=s.replace("import android.content.ContentProvider;", "import android.content.ContentProvider;\\nimport android.content.Context;", 1)
+    s=s.replace("import android.content.ContentProvider;", "import android.content.ContentProvider;\nimport android.content.Context;", 1)
 if "writeUSBToolProviderStage" not in s:
     anchor='''public class StubContentProvider extends ContentProvider {
 
