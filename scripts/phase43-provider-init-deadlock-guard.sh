@@ -137,7 +137,9 @@ if "writeUSBToolProviderStage" not in s:
                 return result;
             } catch (Throwable error) {
                 writeUSBToolProviderStage("call failed " + error.getClass().getName() + ": " + error.getMessage());
-                throw error;
+                if (error instanceof RuntimeException) throw (RuntimeException) error;
+                if (error instanceof Error) throw (Error) error;
+                throw new IllegalStateException(error);
             }
         }
         writeUSBToolProviderStage("call ignored method=" + method);
