@@ -190,7 +190,7 @@ p.write_text(s)
 # Include provider/process startup trails in the copyable on-device report.
 p=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 s=p.read_text()
-s=s.replace('''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
+s=s.replace(r'''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
                         + "\\nServer boot marker: " + readServerBootMarker(appContext)''',r'''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
                         + "\\nProvider 调用阶段: " + readDiagnosticTail(appContext, "usbtool_va_provider_stage.txt", 8192)
                         + "\\n各进程启动记录: " + readDiagnosticTail(appContext, "usbtool_va_process_startup.txt", 8192)
