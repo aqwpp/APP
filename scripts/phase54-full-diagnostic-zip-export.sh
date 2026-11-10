@@ -76,15 +76,15 @@ methods='''    private static final int USBTOOL_EXPORT_DIAGNOSTICS_REQUEST = 540
     }
 
 '''
-# Inject into the existing callback, which already exists for APK picking.
+# Inject into the existing callback (parameter names vary by app revision).
 import re
-pattern = r'((?:public|protected)\s+void\s+onActivityResult\s*\(\s*int\s+requestCode\s*,\s*int\s+resultCode\s*,\s*(?:android\.content\.)?Intent\s+(\w+)\s*\)\s*\{)'
+pattern = r'((?:public|protected)\s+void\s+onActivityResult\s*\(\s*int\s+(\w+)\s*,\s*int\s+(\w+)\s*,\s*(?:android\.content\.)?Intent\s+(\w+)\s*\)\s*\{)'
 m=re.search(pattern,s)
 if not m: raise SystemExit("Existing onActivityResult callback not found")
-callback=m.group(1); data_name=m.group(2)
+callback=m.group(1); request_name=m.group(2); result_name=m.group(3); data_name=m.group(4)
 handler=f'''
-        if (requestCode == USBTOOL_EXPORT_DIAGNOSTICS_REQUEST) {{
-            if (resultCode == RESULT_OK && {data_name} != null && {data_name}.getData() != null) {{
+        if ({request_name} == USBTOOL_EXPORT_DIAGNOSTICS_REQUEST) {{
+            if ({result_name} == RESULT_OK && {data_name} != null && {data_name}.getData() != null) {{
                 try {{
                     writeDiagnosticZip({data_name}.getData());
                 }} catch (Throwable error) {{
