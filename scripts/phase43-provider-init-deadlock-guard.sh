@@ -19,7 +19,7 @@ p=Path("USBTool/app/src/main/java/com/ssai/usbtool/USBToolApplication.java")
 s=p.read_text()
 if "writeUSBToolProcessStage" not in s:
     anchor='    private static boolean isLauncherProcess(Context context) {'
-    helper='''    private static void writeUSBToolProcessStage(Context context, String stage) {
+    helper=r'''    private static void writeUSBToolProcessStage(Context context, String stage) {
         try {
             String process = Application.getProcessName();
             java.io.File file = new java.io.File(context.getFilesDir(), "usbtool_va_process_startup.txt");
@@ -99,7 +99,7 @@ if "writeUSBToolProviderStage" not in s:
     anchor='''public class StubContentProvider extends ContentProvider {
 
 '''
-    helper='''public class StubContentProvider extends ContentProvider {
+    helper=r'''public class StubContentProvider extends ContentProvider {
 
     private void writeUSBToolProviderStage(String stage) {
         try {
@@ -191,7 +191,7 @@ p.write_text(s)
 p=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 s=p.read_text()
 s=s.replace('''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
-                        + "\\nServer boot marker: " + readServerBootMarker(appContext)''','''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
+                        + "\\nServer boot marker: " + readServerBootMarker(appContext)''',r'''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
                         + "\\nProvider 调用阶段: " + readDiagnosticTail(appContext, "usbtool_va_provider_stage.txt", 8192)
                         + "\\n各进程启动记录: " + readDiagnosticTail(appContext, "usbtool_va_process_startup.txt", 8192)
                         + "\\nServer boot marker: " + readServerBootMarker(appContext)''',1)
