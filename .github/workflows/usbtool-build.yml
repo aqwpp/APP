@@ -1,5 +1,5 @@
 name: USBTool Android 10 ARM64 Debug Build
-# Phase 43 provider guard enabled (newline escape correction)
+# Phase 43 provider guard enabled (tab-indentation correction)
 
 on:
   push:
