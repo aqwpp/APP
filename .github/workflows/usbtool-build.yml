@@ -183,6 +183,10 @@ jobs:
         run: |
           chmod +x scripts/phase48-notification-manager-mirror-fallback.sh
           ./scripts/phase48-notification-manager-mirror-fallback.sh
+      - name: Add per-injector startup diagnostics (Phase 49)
+        run: |
+          chmod +x scripts/phase49-injector-granular-diagnostics.sh
+          ./scripts/phase49-injector-granular-diagnostics.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -237,7 +241,7 @@ jobs:
           ls -l "$APK" "$FIXTURE"
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase28-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
+          zip -qr USBTool-Android10-ARM64-phase49-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -257,6 +261,7 @@ jobs:
             USBTool/BUILD_AUDIT_PHASE42.txt
             USBTool/BUILD_AUDIT_PHASE43.txt
             USBTool/BUILD_AUDIT_PHASE44.txt
-            USBTool-Android10-ARM64-phase28-source.zip
+            USBTool/BUILD_AUDIT_PHASE49.txt
+            USBTool-Android10-ARM64-phase49-source.zip
           if-no-files-found: error
           retention-days: 30
