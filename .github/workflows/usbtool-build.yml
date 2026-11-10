@@ -171,6 +171,10 @@ jobs:
         run: |
           chmod +x scripts/phase45-hcallback-api29-mirror-fallback.sh
           ./scripts/phase45-hcallback-api29-mirror-fallback.sh
+      - name: Fix Android 10 ClipboardManager mirror null mapping (Phase 46)
+        run: |
+          chmod +x scripts/phase46-clipboard-mirror-fallback.sh
+          ./scripts/phase46-clipboard-mirror-fallback.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
