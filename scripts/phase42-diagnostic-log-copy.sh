@@ -23,10 +23,14 @@ add_once('''        page.addView(readiness);
         page.addView(copyLogs);
 
         TextView note = new TextView(this);''',"main log button")
-add_once('''                            .setMessage(result)
-                            .setPositiveButton("关闭", null).show();''','''                            .setMessage(result)
-                            .setNeutralButton("复制日志", (d, w) -> copyText("USBTool 虚拟 APK 诊断日志", result))
-                            .setPositiveButton("关闭", null).show();''',"startup result copy")
+add_once('''                            .setTitle("VirtualApp 初始化结果")
+                            .setMessage(result)
+                            .setPositiveButton("关闭", null)
+                            .show();''','''                            .setTitle("VirtualApp 初始化结果")
+                            .setMessage(result)
+                            .setNeutralButton("复制日志", (d, w) -> copyText("USBTool VirtualCore 初始化日志", result))
+                            .setPositiveButton("关闭", null)
+                            .show();''',"startup result copy")
 add_once('''                .setMessage(VirtualAppReadinessReport.create(this))
                 .setPositiveButton("关闭", null).show());''','''                .setMessage(VirtualAppReadinessReport.create(this))
                 .setNeutralButton("复制日志", (d, w) -> copyText("USBTool 依赖诊断", VirtualAppReadinessReport.create(this)))
