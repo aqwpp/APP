@@ -39,16 +39,10 @@ methods='''    private static final int USBTOOL_EXPORT_DIAGNOSTICS_REQUEST = 540
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != USBTOOL_EXPORT_DIAGNOSTICS_REQUEST
-                || resultCode != RESULT_OK || data == null || data.getData() == null) return;
-        try {
-            android.net.Uri target = data.getData();
-            try (java.io.OutputStream raw = getContentResolver().openOutputStream(target);
-                 java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(raw)) {
-                if (raw == null) throw new java.io.IOException("无法写入所选文件");
+    private void writeDiagnosticZip(android.net.Uri target) throws Exception {
+        try (java.io.OutputStream raw = getContentResolver().openOutputStream(target)) {
+            if (raw == null) throw new java.io.IOException("无法写入所选文件");
+            try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(raw)) {
                 java.io.File[] files = getFilesDir().listFiles();
                 if (files != null) {
                     for (java.io.File file : files) {
@@ -71,22 +65,41 @@ methods='''    private static final int USBTOOL_EXPORT_DIAGNOSTICS_REQUEST = 540
                         + "Process: " + android.app.Application.getProcessName() + "\\n";
                 zip.write(environment.getBytes("UTF-8"));
                 zip.closeEntry();
-
                 zip.putNextEntry(new java.util.zip.ZipEntry("logs/last_virtualapp_result.txt"));
                 String last = getSharedPreferences("usbtool_diagnostics", MODE_PRIVATE)
                         .getString("last_virtualapp_result", "暂无记录");
                 zip.write(last.getBytes("UTF-8"));
                 zip.closeEntry();
-                zip.finish();
             }
-            Toast.makeText(this, "完整诊断日志 ZIP 已保存，请将 ZIP 文件发送到聊天", Toast.LENGTH_LONG).show();
-        } catch (Throwable error) {
-            Toast.makeText(this, "导出失败：" + error.getClass().getSimpleName()
-                    + ": " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
+        Toast.makeText(this, "完整诊断日志 ZIP 已保存，请将 ZIP 文件发送到聊天", Toast.LENGTH_LONG).show();
     }
 
 '''
+# Inject into the existing callback, which already exists for APK picking.
+import re
+pattern = r'((?:public|protected)\s+void\s+onActivityResult\s*\(\s*int\s+requestCode\s*,\s*int\s+resultCode\s*,\s*(?:android\.content\.)?Intent\s+(\w+)\s*\)\s*\{)'
+m=re.search(pattern,s)
+if not m: raise SystemExit("Existing onActivityResult callback not found")
+callback=m.group(1); data_name=m.group(2)
+handler=f'''
+        if (requestCode == USBTOOL_EXPORT_DIAGNOSTICS_REQUEST) {{
+            if (resultCode == RESULT_OK && {data_name} != null && {data_name}.getData() != null) {{
+                try {{
+                    writeDiagnosticZip({data_name}.getData());
+                }} catch (Throwable error) {{
+                    Toast.makeText(this, "导出失败：" + error.getClass().getSimpleName()
+                            + ": " + error.getMessage(), Toast.LENGTH_LONG).show();
+                }}
+            }}
+            return;
+        }}
+'''
+# Add the constant and helper, then splice the branch into existing callback.
+if "USBTOOL_EXPORT_DIAGNOSTICS_REQUEST" not in s:
+    if anchor not in s: raise SystemExit("runtime method insertion anchor missing")
+    s=s.replace(anchor,methods+anchor,1)
+s=s.replace(callback,callback+handler,1)
 if "USBTOOL_EXPORT_DIAGNOSTICS_REQUEST" not in s:
     if anchor not in s: raise SystemExit("runtime method insertion anchor missing")
     s=s.replace(anchor,methods+anchor,1)
@@ -96,6 +109,8 @@ PY
 
 grep -q '导出完整诊断日志 ZIP' "$MAIN"
 grep -q 'ACTION_CREATE_DOCUMENT' "$MAIN"
+grep -q 'writeDiagnosticZip' "$MAIN"
+! grep -q 'protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data)' "$MAIN"
 grep -q 'usbtool_va_' "$MAIN"
 cat > USBTool/BUILD_AUDIT_PHASE54.txt <<'AUDIT'
 USBTool Phase 54 - export complete diagnostics as ZIP
