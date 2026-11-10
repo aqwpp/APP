@@ -179,6 +179,10 @@ jobs:
         run: |
           chmod +x scripts/phase47-vendor-clipboard-binder-fallback.sh
           ./scripts/phase47-vendor-clipboard-binder-fallback.sh
+      - name: Fix Android 10 NotificationManager mirror null mapping (Phase 48)
+        run: |
+          chmod +x scripts/phase48-notification-manager-mirror-fallback.sh
+          ./scripts/phase48-notification-manager-mirror-fallback.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
