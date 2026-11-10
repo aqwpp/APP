@@ -199,6 +199,10 @@ jobs:
         run: |
           chmod +x scripts/phase52-contextfixer-granular-diagnostics.sh
           ./scripts/phase52-contextfixer-granular-diagnostics.sh
+      - name: Add ContentProviderClient acquisition and Binder-call diagnostics (Phase 53)
+        run: |
+          chmod +x scripts/phase53-provider-client-diagnostics.sh
+          ./scripts/phase53-provider-client-diagnostics.sh
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -253,7 +257,7 @@ jobs:
           ls -l "$APK" "$FIXTURE"
       - name: Package reproducible source project
         run: |
-          zip -qr USBTool-Android10-ARM64-phase52-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
+          zip -qr USBTool-Android10-ARM64-phase53-source.zip USBTool scripts .github/workflows/usbtool-build.yml -x 'USBTool/**/build/*' 'USBTool/.gradle/*' 'USBTool/.idea/*'
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -275,6 +279,7 @@ jobs:
             USBTool/BUILD_AUDIT_PHASE44.txt
             USBTool/BUILD_AUDIT_PHASE49.txt
             USBTool/BUILD_AUDIT_PHASE50.txt
+            USBTool/BUILD_AUDIT_PHASE53.txt
             USBTool-Android10-ARM64-phase52-source.zip
           if-no-files-found: error
           retention-days: 30
