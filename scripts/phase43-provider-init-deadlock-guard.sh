@@ -23,7 +23,7 @@ if "writeUSBToolProcessStage" not in s:
         try {
             String process = Application.getProcessName();
             java.io.File file = new java.io.File(context.getFilesDir(), "usbtool_va_process_startup.txt");
-            String line = "pid=" + android.os.Process.myPid() + " process=" + process + " stage=" + stage + "\\n";
+            String line = "pid=" + android.os.Process.myPid() + " process=" + process + " stage=" + stage + "\n";
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file, true)) {
                 out.write(line.getBytes("UTF-8")); out.flush(); out.getFD().sync();
             }
@@ -107,7 +107,7 @@ if "writeUSBToolProviderStage" not in s:
             if (context == null) return;
             java.io.File file = new java.io.File(context.getFilesDir(), "usbtool_va_provider_stage.txt");
             String line = "pid=" + Process.myPid() + " process=" + android.app.Application.getProcessName()
-                    + " stage=" + stage + "\\n";
+                    + " stage=" + stage + "\n";
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file, true)) {
                 out.write(line.getBytes("UTF-8")); out.flush(); out.getFD().sync();
             }
@@ -190,11 +190,11 @@ p.write_text(s)
 # Include provider/process startup trails in the copyable on-device report.
 p=Path("USBTool/app/src/main/java/com/ssai/usbtool/runtime/virtualapp/VirtualAppPackageRunner.java")
 s=p.read_text()
-s=s.replace(r'''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
-                        + "\\nServer boot marker: " + readServerBootMarker(appContext)''',r'''                        + "\\nActivity 启动子阶段: " + readActivityStage(appContext)
-                        + "\\nProvider 调用阶段: " + readDiagnosticTail(appContext, "usbtool_va_provider_stage.txt", 8192)
-                        + "\\n各进程启动记录: " + readDiagnosticTail(appContext, "usbtool_va_process_startup.txt", 8192)
-                        + "\\nServer boot marker: " + readServerBootMarker(appContext)''',1)
+s=s.replace(r'''                        + "\nActivity 启动子阶段: " + readActivityStage(appContext)
+                        + "\nServer boot marker: " + readServerBootMarker(appContext)''',r'''                        + "\nActivity 启动子阶段: " + readActivityStage(appContext)
+                        + "\nProvider 调用阶段: " + readDiagnosticTail(appContext, "usbtool_va_provider_stage.txt", 8192)
+                        + "\n各进程启动记录: " + readDiagnosticTail(appContext, "usbtool_va_process_startup.txt", 8192)
+                        + "\nServer boot marker: " + readServerBootMarker(appContext)''',1)
 if "readDiagnosticTail(Context context" not in s:
     anchor='''    private static String readServerBootMarker(Context context) {'''
     method='''    private static String readDiagnosticTail(Context context, String name, int maxBytes) {
