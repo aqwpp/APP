@@ -131,6 +131,20 @@ if old_retry not in s:
     raise SystemExit("URI retry helper marker missing")
 s = s.replace(old_retry, new_retry, 1)
 p.write_text(s)
+
+activity = Path("USBTool/app/src/main/java/com/ssai/usbtool/MainActivity.java")
+ui = activity.read_text()
+needle = '''                .append("Provider 调用阶段:\\n")
+                .append(readDiagnosticTail("usbtool_va_provider_stage.txt", 8192)).append("\\n\\n")
+'''
+addition = needle + '''                .append("Provider 客户端获取/调用阶段:\\n")
+                .append(readDiagnosticTail("usbtool_va_provider_client_stage.txt", 16384)).append("\\n\\n")
+'''
+if "usbtool_va_provider_client_stage.txt" not in ui:
+    if needle not in ui:
+        raise SystemExit("MainActivity provider diagnostics insertion marker missing")
+    ui = ui.replace(needle, addition, 1)
+    activity.write_text(ui)
 PY
 cat > USBTool/BUILD_AUDIT_PHASE53.txt <<'AUDIT'
 USBTool Phase 53 - ContentProviderClient acquisition/call diagnostics
