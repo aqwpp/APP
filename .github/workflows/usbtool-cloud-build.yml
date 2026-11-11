@@ -1,0 +1,87 @@
+name: USBTool cloud APK build
+
+on:
+  push:
+    branches: ['usbtool/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ARM64
+            abi: arm64
+            apk: USBTool-arm64-debug.apk
+            expected: arm64-v8a
+          - name: ARM32
+            abi: armeabi-v7a
+            apk: USBTool-arm32-debug.apk
+            expected: armeabi-v7a
+          - name: Universal
+            abi: universal
+            apk: USBTool-universal-debug.apk
+            expected: both
+    steps:
+      - name: Checkout build recipe
+        uses: actions/checkout@v4
+      - name: Checkout NestSpace v1.0.7 source
+        uses: actions/checkout@v4
+        with:
+          repository: chuccp/NestSpace
+          ref: v1.0.7
+          path: src
+      - name: Apply USBTool project patch
+        run: |
+          set -euo pipefail
+          base64 -d patches/usbtool-v1.0.7.patch.gz.b64 | gzip -dc > /tmp/usbtool.patch
+          cd src
+          patch -p1 --batch < /tmp/usbtool.patch
+          grep -F 'applicationId = "com.ssai.usbtool"' app/build.gradle.kts
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install Android build dependencies
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-37" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build selected ABI
+        working-directory: src
+        run: |
+          set -euo pipefail
+          ./gradlew :app:assembleDebug -PnestspaceHostAbi=${{ matrix.abi }} --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk "${{ github.workspace }}/${{ matrix.apk }}"
+      - name: Verify package and ABI
+        run: |
+          set -euo pipefail
+          AAPT="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          "$AAPT" dump badging "${{ matrix.apk }}" | grep -F "package: name='com.ssai.usbtool'"
+          unzip -Z1 "${{ matrix.apk }}" | grep '^lib/' | sort -u
+          if [ "${{ matrix.expected }}" = "both" ]; then
+            unzip -Z1 "${{ matrix.apk }}" | grep -q '^lib/arm64-v8a/'
+            unzip -Z1 "${{ matrix.apk }}" | grep -q '^lib/armeabi-v7a/'
+          else
+            unzip -Z1 "${{ matrix.apk }}" | grep -q "^lib/${{ matrix.expected }}/"
+          fi
+      - name: Upload APK artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: USBTool-${{ matrix.abi }}-debug
+          path: ${{ matrix.apk }}
+          if-no-files-found: ignore
