@@ -51,6 +51,9 @@ jobs:
           # The optional example plugin is not required by the host APK; exclude it from CI.
           sed -i '/includeDevPlugin(/,/^)/d' settings.gradle.kts
           sed -i '/file("dev-plugins").listFiles()/,$d' settings.gradle.kts
+          # Remove app-side references to optional dev plugins excluded above.
+          sed -i '/discoveredDevPluginProjects.forEach {/,/^    }/d' app/build.gradle.kts
+          ! grep -q "discoveredDevPluginProjects.forEach" app/build.gradle.kts
           tail -n 12 settings.gradle.kts
       - name: Set up JDK 21
         uses: actions/setup-java@v4
