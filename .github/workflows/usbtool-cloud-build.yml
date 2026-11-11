@@ -48,6 +48,10 @@ jobs:
           # Android 37 platform is not available on the hosted SDK image yet.
           sed -i 's/version = release(37)/version = release(36)/; s/targetSdk = 37/targetSdk = 36/' app/build.gradle.kts
           grep -F 'version = release(36)' app/build.gradle.kts
+          # The optional example plugin is not required by the host APK; exclude it from CI.
+          sed -i '/includeDevPlugin(/,/^)/d' settings.gradle.kts
+          sed -i '/file("dev-plugins").listFiles()/,$d' settings.gradle.kts
+          tail -n 12 settings.gradle.kts
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
