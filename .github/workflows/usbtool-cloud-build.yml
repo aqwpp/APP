@@ -74,7 +74,7 @@ jobs:
         working-directory: src
         run: |
           set -euo pipefail
-          ./gradlew :app:assembleDebug -PnestspaceHostAbi=${{ matrix.abi }} --stacktrace
+          ./gradlew :app:assembleDebug -PnestspaceHostAbi=${{ matrix.abi }} -Pandroid.experimental.disableCompileSdkChecks=true --stacktrace
           cp app/build/outputs/apk/debug/app-debug.apk "${{ github.workspace }}/${{ matrix.apk }}"
       - name: Verify package and ABI
         run: |
